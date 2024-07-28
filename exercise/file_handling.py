@@ -1,6 +1,4 @@
 import os
-import csv
-import io
 
 def read_file_safe(file_path):
     """
@@ -34,20 +32,3 @@ def read_file_safe(file_path):
         return (False, "Error: An IOError occurred while reading the file.")
     except Exception as e:
         return (False, f"An unexpected error occurred: {e}")
-
-if __name__ == "__main__":
-
-    # Example usage
-    file_path = "../data/Batting/ODI data.csv"  # This can be a relative path to the script's directory
-    status, content = read_file_safe(file_path)
-
-    if status:
-        # Use io.StringIO to convert the string data to a file-like object
-        csvfile = io.StringIO(content)
-        csv_reader = csv.reader(csvfile)
-
-        for row in csv_reader:
-            print(row)
-    else:
-        print("An error occurred:")
-        print(content)
