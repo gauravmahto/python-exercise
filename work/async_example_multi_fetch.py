@@ -1,7 +1,11 @@
 import asyncio
 import aiohttp
 
-from decorators import decorator
+# Can be imported if warlock_utils_package is not a package
+# from warlock_utils_package.decorators import decorator
+# else import like
+from warlock_utils_package import decorator
+
 
 @decorator
 async def fetch_url(session, url):
