@@ -91,9 +91,17 @@ class FileOperations:
         Returns:
             str: A string containing the data from the file.
         """
-        with open(filename, "r") as file:
-            data = file.read()
-            return data
+
+        try:
+            with open(filename, "r") as file:
+                data = file.read()
+                return data
+        except FileNotFoundError:
+            print("File not found.")
+        except PermissionError:
+            print("Permission denied.")
+        except Exception as e:
+            print(f"An error occurred: {e}")
 
     def read_csv(self, filename: str) -> List[Person]:
         """
@@ -107,11 +115,18 @@ class FileOperations:
         """
         persons: List[Person] = []
 
-        with open(filename, "r") as file:
-            csv_reader = csv.DictReader(file)
-            for row in csv_reader:
-                person = Person.deserialize(row)
-                persons.append(person)
+        try:
+            with open(filename, "r") as file:
+                csv_reader = csv.DictReader(file)
+                for row in csv_reader:
+                    person = Person.deserialize(row)
+                    persons.append(person)
+        except FileNotFoundError:
+            print("File not found.")
+        except PermissionError:
+            print("Permission denied.")
+        except Exception as e:
+            print(f"An error occurred: {e}")
 
         return persons
 
@@ -123,12 +138,20 @@ class FileOperations:
             filename (str): The name of the file to write to.
             data (MyCsvData): The data to write to the file.
         """
-        with open(filename, "w", newline="") as file:
-            fieldnames = ["name", "age", "city"]
-            csv_writer = csv.DictWriter(file, fieldnames=fieldnames)
-            csv_writer.writeheader()
-            for person in data:
-                csv_writer.writerow(person.serialize())
+
+        try:
+            with open(filename, "w", newline="") as file:
+                fieldnames = ["name", "age", "city"]
+                csv_writer = csv.DictWriter(file, fieldnames=fieldnames)
+                csv_writer.writeheader()
+                for person in data:
+                    csv_writer.writerow(person.serialize())
+        except FileNotFoundError:
+            print("File not found.")
+        except PermissionError:
+            print("Permission denied.")
+        except Exception as e:
+            print(f"An error occurred: {e}")
 
     def write_json(self, filename: str, data: List[Person]):
         """
@@ -138,9 +161,17 @@ class FileOperations:
             filename (str): The name of the file to write to.
             data (MyJsonData): The data to write to the file.
         """
-        with open(filename, "w") as file:
-            json_data = [person.serialize() for person in data]
-            json.dump(json_data, file, indent=4)
+
+        try:
+            with open(filename, "w") as file:
+                json_data = [person.serialize() for person in data]
+                json.dump(json_data, file, indent=4)
+        except FileNotFoundError:
+            print("File not found.")
+        except PermissionError:
+            print("Permission denied.")
+        except Exception as e:
+            print(f"An error occurred: {e}")
 
     def read_json(self, filename: str) -> List[Person]:
         """
@@ -152,9 +183,17 @@ class FileOperations:
         Returns:
             list: A list of Person objects.
         """
-        with open(filename, "r") as file:
-            json_data = json.load(file)
-            return [Person(**person) for person in json_data]
+
+        try:
+            with open(filename, "r") as file:
+                json_data = json.load(file)
+                return [Person(**person) for person in json_data]
+        except FileNotFoundError:
+            print("File not found.")
+        except PermissionError:
+            print("Permission denied.")
+        except Exception as e:
+            print(f"An error occurred: {e}")
 
 
 if __name__ == "__main__":
