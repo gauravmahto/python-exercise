@@ -1,10 +1,18 @@
 import csv
 from dataclasses import dataclass, asdict, fields
 import json
-from typing import List, TypedDict
+from os.path import join
+from pathlib import Path
+from typing import List, Tuple, TypedDict
 
-filename = "data/persons.ignore.csv"
-filename_json = "data/persons.ignore.json"
+filename = join("data", "persons.ignore.csv")
+
+# Modern python way
+data_dir = Path("data")
+filename_json = data_dir / "persons.ignore.json"
+
+# Ensure the directory exists
+data_dir.mkdir(parents=True, exist_ok=True)
 
 
 @dataclass
@@ -80,6 +88,21 @@ class FileOperations:
 
     def __init__(self):
         pass
+
+    def read_count_lines_words(self, filename: str) -> Tuple[int, int]:
+        try:
+            with open(filename, "r") as file:
+                lines = file.readlines()
+                num_lines = len(lines)
+                num_words = sum(len(line.split()) for line in lines)
+
+                return num_lines, num_words
+        except FileNotFoundError:
+            print("File not found.")
+        except PermissionError:
+            print("Permission denied.")
+        except Exception as e:
+            print(f"An error occurred: {e}")
 
     def read(self, filename: str) -> str:
         """
@@ -217,3 +240,6 @@ if __name__ == "__main__":
     persons_from_json = file_operations.read_json(filename_json)
     print(persons_from_json)
     print("\n".join([str(person) for person in persons_from_json]))
+
+    num_lines, num_words = file_operations.read_count_lines_words(filename)
+    print(f"Number of lines: {num_lines}, Number of words: {num_words}")

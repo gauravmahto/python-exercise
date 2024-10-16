@@ -1,6 +1,7 @@
 import asyncio
 import inspect
 from typing import Any
+from functools import wraps
 
 
 def decorator(func: callable) -> callable:
@@ -15,6 +16,7 @@ def decorator(func: callable) -> callable:
     """
     if inspect.iscoroutinefunction(func):  # Check if the function is async
 
+        @wraps(func)
         async def wrapper(*args, **kwargs) -> Any:
             """
             The wrapper function for async functions.
@@ -31,6 +33,7 @@ def decorator(func: callable) -> callable:
 
     else:
 
+        @wraps(func)
         def wrapper(*args, **kwargs) -> Any:
             """
             The wrapper function for sync functions.
