@@ -5,9 +5,10 @@ from os.path import join
 from pathlib import Path
 from typing import List, Tuple, TypedDict
 
+# Define the filename and path for the CSV and JSON files
 filename = join("data", "persons.ignore.csv")
 
-# Modern python way
+# Modern Python way
 data_dir = Path("data")
 filename_json = data_dir / "persons.ignore.json"
 
@@ -17,6 +18,10 @@ data_dir.mkdir(parents=True, exist_ok=True)
 
 @dataclass
 class Person:
+    """
+    A dataclass representing a person with name, age, and city.
+    """
+
     name: str
     age: int
     city: str
@@ -90,6 +95,13 @@ class FileOperations:
         pass
 
     def read_count_lines_words(self, filename: str) -> Tuple[int, int]:
+        """
+        Reads a file and returns the number of lines and words.
+
+        :param filename (str): The name of the file to read.
+
+        :return Tuple[int, int]: A tuple containing the number of lines and words.
+        """
         try:
             with open(filename, "r") as file:
                 lines = file.readlines()
@@ -99,10 +111,13 @@ class FileOperations:
                 return num_lines, num_words
         except FileNotFoundError:
             print("File not found.")
+            return 0, 0
         except PermissionError:
             print("Permission denied.")
+            return 0, 0
         except Exception as e:
             print(f"An error occurred: {e}")
+            return 0, 0
 
     def read(self, filename: str) -> str:
         """
@@ -121,20 +136,21 @@ class FileOperations:
                 return data
         except FileNotFoundError:
             print("File not found.")
+            return ""
         except PermissionError:
             print("Permission denied.")
+            return ""
         except Exception as e:
             print(f"An error occurred: {e}")
+            return ""
 
     def read_csv(self, filename: str) -> List[Person]:
         """
-        Reads a CSV file and returns the data as a list of lists.
+        Reads a CSV file and returns the data as a list of Person instances.
 
-        Args:
-            filename (str): The name of the file to read.
+        :param filename (str): The name of the file to read.
 
-        Returns:
-            list: A list of lists, where each sublist contains the data from a row in the CSV file.
+        :return List[Person]: A list of Person instances.
         """
         persons: List[Person] = []
 
@@ -142,12 +158,65 @@ class FileOperations:
             with open(filename, "r") as file:
                 csv_reader = csv.DictReader(file)
                 for row in csv_reader:
-                    person = Person.deserialize(row)
-                    persons.append(person)
+                    try:
+                        person = Person.deserialize(row)
+                        persons.append(person)
+                    except KeyError as e:
+                        key_name = e.args[0]
+                        print(
+                            f"Missing key: '{key_name}' in row {row}. Using default value."
+                        )
+
+                        # Handle missing 'age' key specifically
+                        if key_name == "age":
+                            person = Person(
+                                name=row.get("name", "Unknown"),
+                                age=0,
+                                city=row.get("city", "Unknown"),
+                            )
+                            persons.append(person)
+                        else:
+                            print(f"Skipping row due to missing key: '{key_name}'.")
+
+                    except ValueError as e:
+                        # Capture invalid value scenarios
+                        invalid_key = None
+                        for key, value in row.items():
+                            try:
+                                # Assuming the expected value types:
+                                # 'name' as str, 'age' as int, 'city' as str
+                                if key == "age":
+                                    int(value)  # Check if 'age' can be converted to int
+                                elif key in ["name", "city"]:
+                                    if (
+                                        not isinstance(value, str) or not value.strip()
+                                    ):  # Check for non-empty string
+                                        raise ValueError(
+                                            f"Invalid value for '{key}': {value}"
+                                        )
+                            except ValueError:
+                                invalid_key = key
+                                break
+
+                        if invalid_key == "age":
+                            print(
+                                f"ValueError for row {row}: {e}. using default value 0."
+                            )
+                            person = Person(
+                                name=row.get("name", "Unknown"),
+                                age=0,
+                                city=row.get("city", "Unknown"),
+                            )
+                            persons.append(person)
+                        else:
+                            print(f"ValueError for row {row}: {e}. Skipping row.")
+
         except FileNotFoundError:
             print("File not found.")
         except PermissionError:
             print("Permission denied.")
+        except csv.Error as e:
+            print(f"CSV error: {e}")
         except Exception as e:
             print(f"An error occurred: {e}")
 
@@ -157,9 +226,8 @@ class FileOperations:
         """
         Writes data to a CSV file.
 
-        Args:
-            filename (str): The name of the file to write to.
-            data (MyCsvData): The data to write to the file.
+        :param filename (str): The name of the file to write to.
+        :param data (List[Person]): The data to write to the file.
         """
 
         try:
@@ -173,6 +241,8 @@ class FileOperations:
             print("File not found.")
         except PermissionError:
             print("Permission denied.")
+        except csv.Error as e:
+            print(f"CSV error: {e}")
         except Exception as e:
             print(f"An error occurred: {e}")
 
@@ -180,9 +250,8 @@ class FileOperations:
         """
         Writes data to a JSON file.
 
-        Args:
-            filename (str): The name of the file to write to.
-            data (MyJsonData): The data to write to the file.
+        :param filename (str): The name of the file to write to.
+        :param data (List[Person]): The data to write to the file.
         """
 
         try:
@@ -193,30 +262,43 @@ class FileOperations:
             print("File not found.")
         except PermissionError:
             print("Permission denied.")
+        except json.JSONDecodeError as e:
+            print(f"JSON error: {e}")
         except Exception as e:
             print(f"An error occurred: {e}")
 
     def read_json(self, filename: str) -> List[Person]:
         """
-        Reads a JSON file and returns the data as a list of Person objects.
+        Reads a JSON file and returns the data as a list of Person instances.
 
-        Args:
-            filename (str): The name of the file to read.
+        :param filename (str): The name of the file to read.
 
-        Returns:
-            list: A list of Person objects.
+        :return List[Person]: A list of Person instances.
         """
 
         try:
             with open(filename, "r") as file:
                 json_data = json.load(file)
-                return [Person(**person) for person in json_data]
+                persons = []
+                for person_data in json_data:
+                    try:
+                        person = Person.deserialize(person_data)
+                        persons.append(person)
+                    except (KeyError, ValueError) as e:
+                        print(f"Invalid JSON structure: {e}")
+                return persons
         except FileNotFoundError:
             print("File not found.")
+            return []
         except PermissionError:
             print("Permission denied.")
+            return []
+        except json.JSONDecodeError as e:
+            print(f"JSON error: {e}")
+            return []
         except Exception as e:
             print(f"An error occurred: {e}")
+            return []
 
 
 if __name__ == "__main__":
